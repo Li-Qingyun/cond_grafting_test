@@ -1,0 +1,1 @@
+PYTHONPATH='.'$PYTHONPATH  mim train mmdet configs/grafting_conditional_detr_r50_dc5_8x2_50e_coco.py --gpus 1
