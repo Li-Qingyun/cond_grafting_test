@@ -6,18 +6,19 @@ model = dict(
     type='GraftingConditionalDETR',
     # dataset
     dataset_file='coco',
+    num_classes=80,
     # * Backbone
     backbone='resnet50',
     dilation=True,
     position_embedding='sine',
     # * Transformer
-    enc_layers=6,  # TODO
-    dec_layers=6,  # TODO
-    dim_feedforward=2048,  # TODO
+    enc_layers=1,  # TODO
+    dec_layers=1,  # TODO
+    dim_feedforward=256,  # TODO
     hidden_dim=256,
     dropout=0.1,
     nheads=8,
-    num_queries=300,  # TODO
+    num_queries=10,  # TODO
     pre_norm=False,
     # * Segmentation
     masks=False,
@@ -51,4 +52,4 @@ custom_imports = dict(
     allow_failed_imports=False)
 
 # yapf:enable
-custom_hooks = []  # to delete NumClassCheckHook
+# custom_hooks = []  # to delete NumClassCheckHook
