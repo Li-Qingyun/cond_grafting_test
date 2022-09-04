@@ -22,10 +22,11 @@ class GraftingConditionalDETR(SingleStageDetector):
         _args = default_args.copy() \
             if default_args is not None else ConfigDict()
         _args.update(args)
-        model, criterion, postprocessor = build_model(_args)
+        model, criterion, postprocessors = build_model(
+            _args, _args.get('num_classes', None))
         self.model = model
         self.criterion = criterion
-        self.postprocessor = postprocessor
+        self.postprocessor = postprocessors['bbox']
 
     def forward_train(self,
                       img,
@@ -48,19 +49,21 @@ class GraftingConditionalDETR(SingleStageDetector):
         samples = self.prepare_samples(img, img_metas)
         outputs = self.model(samples)
         orig_target_sizes = torch.stack(
-            [torch.tensor(meta['ori_shape'][:2]) for meta in img_metas], dim=0)
+            [torch.tensor(meta['ori_shape'][:2]) for meta in img_metas], dim=0).cuda()
         results = self.postprocessor(outputs, orig_target_sizes)
         assert isinstance(results, list)
-        scores = results[0]['scores']
-        labels = results[0]['labels']
+        scores = results[0]['scores'].unsqueeze(-1)
+        labels = results[0]['labels'].unsqueeze(-1)
         boxes = results[0]['boxes']
         assert scores.size(1) == 1 \
                and labels.size(1) == 1 \
                and boxes.size(1) == 4
-        boxes_and_scores = torch.stack([boxes, scores], dim=1)
+        boxes_and_scores = torch.cat([boxes, scores], dim=1)
         results_list = [(boxes_and_scores, labels)]
         bbox_results = [
-            bbox2result(det_bboxes, det_labels, self.bbox_head.num_classes)
+            bbox2result(det_bboxes,
+                        det_labels.squeeze(1),
+                        self.model.class_embed.out_features)
             for det_bboxes, det_labels in results_list]
         return bbox_results
 
