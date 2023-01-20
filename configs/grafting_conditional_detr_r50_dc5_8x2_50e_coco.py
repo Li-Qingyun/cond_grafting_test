@@ -41,7 +41,7 @@ model = dict(
     lr_backbone=1e-5)
 
 data = dict(
-    samples_per_gpu=2,
+    samples_per_gpu=2,  # TODO
     workers_per_gpu=2,
     train=dict(continuous_categories=True),
     val=dict(continuous_categories=True),

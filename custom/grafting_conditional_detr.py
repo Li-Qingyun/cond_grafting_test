@@ -6,6 +6,7 @@ from torch import Tensor
 from mmcv import ConfigDict
 from mmdet.core import bbox2result
 from mmdet.models import SingleStageDetector, DETECTORS
+from mmdet.core import bbox_cxcywh_to_xyxy, bbox_xyxy_to_cxcywh
 
 from models import build_model
 from util.misc import NestedTensor
@@ -84,10 +85,17 @@ class GraftingConditionalDETR(SingleStageDetector):
         targets = list()
         for i in range(batch_size):
             targets.append(dict(
-                boxes=gt_bboxes[i],
+                boxes=self.prepare_bboxes(gt_bboxes[i], img_metas[i]),
                 labels=gt_labels[i],
                 orig_size=torch.tensor(img_metas[i]['ori_shape'][:2])))
         return targets
+
+    def prepare_bboxes(self, gt_bboxes: Tensor, img_meta: dict):
+        img_h, img_w, _ = img_meta['img_shape']
+        factor = gt_bboxes.new_tensor([img_w, img_h, img_w, img_h]).unsqueeze(0)
+        gt_bboxes = bbox_xyxy_to_cxcywh(gt_bboxes) / factor
+        return gt_bboxes
+
 
     DEFAULT_ARGS = ConfigDict(dict(
         # dataset
